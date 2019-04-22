@@ -4,9 +4,11 @@
 
 <script>
 export default {
-  // components: {
-  //   header
-  // }
+  props: {
+    seller: {
+      type: Object
+    }
+  }
 }
 </script>
 
