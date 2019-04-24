@@ -30,7 +30,7 @@ export default {
   },
   created () {
     this.axios.get('/api/appData').then((body) => {
-      console.log(body)
+      // console.log(body)
       if (body.data.errno === 0) {
         this.seller = body.data.data.seller
         console.log(this.seller)
@@ -40,7 +40,8 @@ export default {
 }
 </script>
 
-<style lang="less" scoped>
+<style lang="stylus" scoped>
+@import "./common/stylus/mixin.styl";
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
