@@ -1,15 +1,15 @@
 <template>
   <div class="goods">
-    <div class="menu-wrapper">
+    <div class="menu-wrapper" ref="menuWrapper">
       <ul>
-        <li class="menu-item" v-for="(item,index) in goods" :key="index">
+        <li class="menu-item" :class="{'current': currentIndex === index}" v-for="(item,index) in goods" :key="index" @click="selectMenu(index)">
           <span class="text"><span class="icon" v-show="item.type>0" :class="classmap[item.type]"></span>{{item.name}}</span>
         </li>
       </ul>
     </div>
-    <div class="foods-wrapper">
-      <ul v-for="(item, index) in goods" :key="index">
-        <li>
+    <div class="foods-wrapper" ref="foodsWrapper">
+      <ul>
+        <li v-for="(item, index) in goods" :key="index" class="food-list-hook">
           <h1 class="menu">{{item.name}}</h1>
           <ul>
             <li v-for="(item, index) in item.foods" :key="index" class="food-item">
@@ -31,11 +31,17 @@
         </li>
       </ul>
     </div>
+    <shopcar></shopcar>
   </div>
 </template>
 
 <script>
+import BScroll from 'better-scroll'
+import shopcar from '@/components/shopcar/shopcar.vue'
 export default {
+  components: {
+    shopcar
+  },
   props: {
     seller: {
       type: Object
@@ -44,7 +50,9 @@ export default {
   data () {
     return {
       goods: [],
-      classmap: []
+      classmap: [],
+      listHeight: [],
+      scrollY: 0
     }
   },
   created () {
@@ -53,8 +61,53 @@ export default {
       if (body.data.errno === 0) {
         console.log(body.data.data.goods)
         this.goods = body.data.data.goods
+        this.$nextTick(() => {
+          this.initScroll()
+          this.calcHeight()
+        })
       }
     })
+  },
+  computed: {
+    currentIndex () {
+      for (let i = 0; i < this.listHeight.length; i++) {
+        let height1 = this.listHeight[i]
+        let height2 = this.listHeight[ i + 1 ]
+        if (!height2 || (this.scrollY <= height2 && this.scrollY >= height1)) {
+          return i
+        }
+      }
+    }
+  },
+  methods: {
+    initScroll () {
+      this.menuScroll = new BScroll(this.$refs.menuWrapper, {
+        click: true
+      })
+      this.foodsScroll = new BScroll(this.$refs.foodsWrapper, {
+        probeType: 3
+      })
+      this.foodsScroll.on('scroll', (pos) => {
+        this.scrollY = Math.abs(Math.round(pos.y))
+      })
+    },
+    calcHeight () {
+      let foodlist = this.$refs.foodsWrapper.getElementsByClassName('food-list-hook')
+      let height = 0
+      this.listHeight.push(height)
+      for (let i = 0; i < foodlist.length; i++) {
+        let item = foodlist[i]
+        height += item.clientHeight
+        this.listHeight.push(height)
+      }
+    },
+    selectMenu (index) {
+      // console.log(index)
+      // console.log(this.listHeight[index])
+      let foodlist = this.$refs.foodsWrapper.getElementsByClassName('food-list-hook')
+      let el = foodlist[index + 1]
+      this.foodsScroll.scrollToElement(el, 300)
+    }
   }
 }
 </script>
@@ -62,6 +115,7 @@ export default {
 <style lang="stylus" scoped>
 @import '../../common/stylus/mixin'
 .goods {
+  touch-action none
   display flex
   width 100%
   position absolute
@@ -81,6 +135,11 @@ export default {
         font-size 12px
         display table
         border-bottom 1px solid rgba(7,17,27,.1)
+        &.current {
+          background-color #fff
+          font-weight 700
+          border none
+        }
         .icon {
           display inline-block
           width 12px
