@@ -3,22 +3,76 @@
     <div class="content">
       <div class="content-left">
         <div class="logo-wrapper">
-          <div class="logo">
+          <div class="logo" :class="{'highlight':totalCount > 0}">
             <span class="icon-shopping_cart"></span>
           </div>
+          <div class="num" v-show="totalCount > 0">{{totalCount}}</div>
         </div>
-        <div class="price">￥</div>
+        <div class="price" :class="{'highlight':totalCount > 0}">￥{{totalPrice}}</div>
         <div class="line"></div>
-        <div class="desc">另需配送费￥元</div>
+        <div class="desc">另需配送费￥{{deliveryPrice}}元</div>
       </div>
-      <div class="content-right">￥起送</div>
+      <div class="content-right" :class="payClass">{{payDesc}}</div>
     </div>
   </div>
 </template>
 
 <script>
 export default {
-
+  props: {
+    deliveryPrice: {
+      type: Number,
+      default: 0
+    },
+    minPrice: {
+      type: Number,
+      default: 0
+    },
+    selectFoods: {
+      type: Array,
+      default () {
+        return [
+          {
+            price: 8,
+            count: 2
+          }
+        ]
+      }
+    }
+  },
+  computed: {
+    totalPrice () {
+      let total = 0
+      this.selectFoods.forEach(food => {
+        total += food.price * food.count
+      })
+      return total
+    },
+    totalCount () {
+      let count = 0
+      this.selectFoods.forEach(food => {
+        count += food.count
+      })
+      return count
+    },
+    payDesc () {
+      if (this.totalPrice === 0) {
+        return `￥${this.minPrice}元起送`
+      } else if (this.totalPrice < this.minPrice) {
+        let diff = this.minPrice - this.totalPrice
+        return `还差￥${diff}元起送`
+      } else {
+        return '去结算'
+      }
+    },
+    payClass () {
+      if (this.totalPrice < this.minPrice) {
+        return 'not-enough'
+      } else {
+        return 'enough'
+      }
+    }
+  }
 }
 </script>
 
@@ -59,13 +113,34 @@ export default {
           line-height 44px
           color rgba(255,255,255,.4)
           font-size 24px
+          &.highlight {
+            background-color rgb(0,160,220)
+            color #fff
+          }
+        }
+        .num {
+          width 24px
+          height 16px
+          position absolute
+          background-color red
+          top 0px
+          right 0px
+          border-radius 8px
+          color #fff
+          text-align center
+          font-size 9px
+          line-height 16px
+          box-shadow 0 4px 8px 0 rgba(0,0,0,.4)
         }
       }
       .price {
-      color rgba(255,255,255,.4)
-      font-size 16px
-      line-height 48px
-      margin-left 80px
+        color rgba(255,255,255,.4)
+        font-size 16px
+        line-height 48px
+        margin-left 80px
+        &.highlight {
+          color #fff
+        }
       }
       .line {
         border-right 1px solid rgba(255,255,255,.1)
@@ -89,6 +164,10 @@ export default {
       line-height 48px
       font-size 14px
       font-weight 700
+      &.enough {
+        background-color #00b43c
+        color #fff
+      }
     }
   }
 }
